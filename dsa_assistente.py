@@ -9,6 +9,23 @@ import streamlit as st
 # Importa a classe Groq para se conectar à API da plataforma Groq e acessar o LLM
 from groq import Groq
 
+
+def _get_default_api_key() -> str:
+    """Recupera a chave da API a partir das variáveis de ambiente ou secrets."""
+
+    # "st.secrets" funciona tanto localmente quanto no Vercel quando as variáveis
+    # de ambiente são configuradas pela interface da plataforma. O bloco try evita
+    # que a execução seja interrompida caso o arquivo "secrets.toml" não exista.
+    try:
+        secret_key = st.secrets.get("GROQ_API_KEY", "")  # type: ignore[attr-defined]
+    except Exception:
+        secret_key = ""
+
+    if secret_key:
+        return secret_key
+
+    return os.getenv("GROQ_API_KEY", "")
+
 # Configura a página do Streamlit com título, ícone, layout e estado inicial da sidebar
 st.set_page_config(
     page_title="Asteca AI Coder",
@@ -33,19 +50,28 @@ REGRAS DE OPERAÇÃO:
 
 # Cria o conteúdo da barra lateral no Streamlit
 with st.sidebar:
-    
+
     # Define o título da barra lateral
     st.title("🤖 Asteca AI Coder")
-    
+
     # Mostra um texto explicativo sobre o assistente
     st.markdown("Um assistente de IA focado em programação Python para ajudar iniciantes.")
     
     # Campo para inserir a chave de API da Groq
+    default_api_key = _get_default_api_key()
+
     groq_api_key = st.text_input(
-        "Insira sua API Key Groq", 
+        "Insira sua API Key Groq",
+        value=default_api_key,
         type="password",
         help="Obtenha sua chave em https://console.groq.com/keys"
     )
+
+    if default_api_key:
+        st.info(
+            "Detectamos uma chave configurada nas variáveis de ambiente. "
+            "Se preferir utilizar outra chave, substitua o valor acima."
+        )
 
     # Adiciona linhas divisórias e explicações extras na barra lateral
     st.markdown("---")
