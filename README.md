@@ -1,31 +1,44 @@
-# Estudo de Caso 1 - Asteca AI Coder - Criando Seu Assistente de Programação Python, em Python
+# Asteca AI Coder
 
-## Abra o terminal ou prompt de comando, navegue até a pasta com os arquivos e execute o comando abaixo para criar um ambiente virtual:
-````
-conda create --name dsaec1 python=3.13
-````
-## Ative o ambiente:
-````
-conda activate dsaec1 (ou: source activate dsaec1)
-````
-## Instale o pip e as dependências:
+Aplicação dividida em **backend FastAPI** e **frontend React (Vite)** para conversar com o modelo `openai/gpt-oss-20b` via Groq.
 
-````
-conda install pip
-pip install -r requirements.txt 
-````
-## Execute a app:
-````
-streamlit run dsa_assistente.py
-````
-## Exemplos de uso do assistente:
+## Pré-requisitos
 
-**Como crio um hello world em Python?**
-**Qual a sintaxe de um loop em Python?**
-**Como eu uso a função map em Python? Me dê um exemplo com lambda.**
+- Python 3.11+
+- Node.js 18+
+- Chave de API Groq válida (`GROQ_API_KEY`)
 
-## Use os comandos abaixo para desativar o ambiente virtual e remover o ambiente (opcional):
-````
-conda deactivate
-conda remove --name dsaec1 --all
-````
+## Configurando o backend
+
+```bash
+python -m venv .venv
+source .venv/bin/activate  # Windows: .venv\\Scripts\\activate
+pip install -r requirements.txt
+export GROQ_API_KEY="sua-chave"  # Windows PowerShell: $Env:GROQ_API_KEY="sua-chave"
+uvicorn dsa_assistente:app --reload
+```
+
+O backend ficará disponível em `http://localhost:8000` com o endpoint `POST /api/chat`.
+
+## Configurando o frontend
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+O Vite abrirá a interface em `http://localhost:5173`, utilizando proxy para o backend local.
+
+Para produção, execute `npm run build` e faça o deploy do conteúdo da pasta `frontend/dist` em qualquer serviço estático.
+
+## Fluxo de uso
+
+1. Inicie o backend com o `uvicorn`.
+2. Rode o frontend com `npm run dev` ou sirva o build.
+3. Informe sua pergunta na interface web e, opcionalmente, forneça outra `API Key Groq` no campo da página.
+
+## Comandos úteis
+
+- Encerrar o ambiente virtual: `deactivate`
+- Remover dependências Node: `rm -rf node_modules package-lock.json` (caso deseje reinstalar)

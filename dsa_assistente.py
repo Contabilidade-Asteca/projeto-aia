@@ -1,41 +1,21 @@
-# Estudo de Caso 1 - DSA AI Coder - Criando Seu Assistente de Programação Python, em Python
+"""Backend FastAPI para o assistente Asteca AI Coder."""
 
-# Importa módulo para interagir com o sistema operacional
+from __future__ import annotations
+
 import os
+from typing import List, Literal, Sequence
 
-# Importa a biblioteca Streamlit para criar a interface web interativa
-import streamlit as st
-
-# Importa a classe Groq para se conectar à API da plataforma Groq e acessar o LLM
+from fastapi import FastAPI, HTTPException, status
+from fastapi.middleware.cors import CORSMiddleware
 from groq import Groq
+from pydantic import BaseModel, Field
+from dotenv import load_dotenv
 
 
-def _get_default_api_key() -> str:
-    """Recupera a chave da API a partir das variáveis de ambiente ou secrets."""
+load_dotenv()
 
-    # "st.secrets" funciona tanto localmente quanto no Vercel quando as variáveis
-    # de ambiente são configuradas pela interface da plataforma. O bloco try evita
-    # que a execução seja interrompida caso o arquivo "secrets.toml" não exista.
-    try:
-        secret_key = st.secrets.get("GROQ_API_KEY", "")  # type: ignore[attr-defined]
-    except Exception:
-        secret_key = ""
 
-    if secret_key:
-        return secret_key
-
-    return os.getenv("GROQ_API_KEY", "")
-
-# Configura a página do Streamlit com título, ícone, layout e estado inicial da sidebar
-st.set_page_config(
-    page_title="Asteca AI Coder",
-    page_icon="🤖",
-    layout="wide",
-    initial_sidebar_state="expanded"
-)
-
-# Define um prompt de sistema que descreve as regras e comportamento do assistente de IA
-CUSTOM_PROMPT = """
+CUSTOM_PROMPT = """\
 Você é o "Asteca Coder", um assistente de IA especialista em programação, com foco principal em Python. Sua missão é ajudar desenvolvedores iniciantes com dúvidas de programação de forma clara, precisa e útil.
 
 REGRAS DE OPERAÇÃO:
@@ -48,143 +28,110 @@ REGRAS DE OPERAÇÃO:
 3.  **Clareza e Precisão**: Use uma linguagem clara. Evite jargões desnecessários. Suas respostas devem ser tecnicamente precisas.
 """
 
-# Cria o conteúdo da barra lateral no Streamlit
-with st.sidebar:
 
-    # Define o título da barra lateral
-    st.title("🤖 Asteca AI Coder")
+class ChatMessage(BaseModel):
+    """Representa uma mensagem individual da conversa."""
 
-    # Mostra um texto explicativo sobre o assistente
-    st.markdown("Um assistente de IA focado em programação Python para ajudar iniciantes.")
-    
-    # Campo para inserir a chave de API da Groq
-    default_api_key = _get_default_api_key()
+    role: Literal["user", "assistant", "system"] = Field(
+        ..., description="Origem da mensagem: usuário, assistente ou sistema."
+    )
+    content: str = Field(..., description="Conteúdo textual da mensagem.")
 
-    groq_api_key = st.text_input(
-        "Insira sua API Key Groq",
-        value=default_api_key,
-        type="password",
-        help="Obtenha sua chave em https://console.groq.com/keys"
+
+class ChatRequest(BaseModel):
+    """Payload recebido do frontend."""
+
+    prompt: str = Field(..., description="Mensagem atual do usuário.")
+    history: Sequence[ChatMessage] = Field(
+        default_factory=list,
+        description="Histórico completo de mensagens trocadas anteriormente.",
+    )
+    api_key: str | None = Field(
+        default=None,
+        description="Chave da API Groq fornecida pelo usuário (opcional).",
     )
 
-    if default_api_key:
-        st.info(
-            "Detectamos uma chave configurada nas variáveis de ambiente. "
-            "Se preferir utilizar outra chave, substitua o valor acima."
-        )
 
-    # Adiciona linhas divisórias e explicações extras na barra lateral
-    st.markdown("---")
-    st.markdown("Desenvolvido por OJUARA_E para auxiliar em suas dúvidas de programação com Linguagem Python. IA pode cometer erros. Sempre verifique as respostas.")
+class ChatResponse(BaseModel):
+    """Resposta retornada para o frontend."""
 
-    st.markdown("---")
-    st.markdown("Desenvolvido durante os Cursos Individuais, Formações e Programas de Pós-Graduação da DSA:")
+    reply: str = Field(..., description="Texto gerado pelo assistente.")
 
-    # Link para o site da DSA
-    st.markdown("🔗 [Instagram Ojuara](https://www.instagram.com/ojuara_e)")
-    
-    # Botão de link para enviar e-mail ao suporte da DSA
-    st.link_button("✉️ E-mail Suporte do Ojuara no Caso de Dúvidas", "mailto:ellihasdhavisaraujo2@gmail.com")
 
-# Título principal do app
-st.title("Asteca AI Coder")
-
-# Subtítulo adicional
-st.title("Assistente Pessoal de Programação Python 🐍")
-
-# Texto auxiliar abaixo do título
-st.caption("Faça sua pergunta sobre a Linguagem Python e obtenha código, explicações e referências.")
-
-# Inicializa o histórico de mensagens na sessão, caso ainda não exista
-if "messages" not in st.session_state:
-    st.session_state.messages = []
-
-# Exibe todas as mensagens anteriores armazenadas no estado da sessão
-for message in st.session_state.messages:
-    with st.chat_message(message["role"]):
-        st.markdown(message["content"])
-
-# Inicializa a variável do cliente Groq como None
-client = None
-
-# Verifica se o usuário forneceu a chave de API da Groq
-if groq_api_key:
-    
-    try:
-        
-        # Cria cliente Groq com a chave de API fornecida
-        client = Groq(api_key = groq_api_key)
-    
-    except Exception as e:
-        
-        # Exibe erro caso haja problema ao inicializar cliente
-        st.sidebar.error(f"Erro ao inicializar o cliente Groq: {e}")
-        st.stop()
-
-# Caso não tenha chave, mas já existam mensagens, mostra aviso
-elif st.session_state.messages:
-     st.warning("Por favor, insira sua API Key da Groq na barra lateral para continuar.")
-
-# Captura a entrada do usuário no chat
-if prompt := st.chat_input("Qual sua dúvida sobre Python?"):
-    
-    # Se não houver cliente válido, mostra aviso e para a execução
-    if not client:
-        st.warning("Por favor, insira sua API Key da Groq na barra lateral para começar.")
-        st.stop()
-
-    # Armazena a mensagem do usuário no estado da sessão
-    st.session_state.messages.append({"role": "user", "content": prompt})
-    
-    # Exibe a mensagem do usuário no chat
-    with st.chat_message("user"):
-        st.markdown(prompt)
-
-    # Prepara mensagens para enviar à API, incluindo prompt de sistema
-    messages_for_api = [{"role": "system", "content": CUSTOM_PROMPT}]
-    for msg in st.session_state.messages:
-        
-        messages_for_api.append(msg)
-
-    # Cria a resposta do assistente no chat
-    with st.chat_message("assistant"):
-        
-        with st.spinner("Analisando sua pergunta..."):
-            
-            try:
-                
-                # Chama a API da Groq para gerar a resposta do assistente
-                chat_completion = client.chat.completions.create(
-                    messages = messages_for_api,
-                    model = "openai/gpt-oss-20b", 
-                    temperature = 0.7,
-                    max_tokens = 2048,
-                )
-                
-                # Extrai a resposta gerada pela API
-                dsa_ai_resposta = chat_completion.choices[0].message.content
-                
-                # Exibe a resposta no Streamlit
-                st.markdown(dsa_ai_resposta)
-                
-                # Armazena resposta do assistente no estado da sessão
-                st.session_state.messages.append({"role": "assistant", "content": dsa_ai_resposta})
-
-            # Caso ocorra erro na comunicação com a API, exibe mensagem de erro
-            except Exception as e:
-                st.error(f"Ocorreu um erro ao se comunicar com a API da Groq: {e}")
-
-st.markdown(
-    """
-    <div style="text-align: center; color: gray;">
-        <hr>
-        <p>Asteca AI Coder - Todos os direitos reservados - Jaraguá do Sul - 2025</p>
-    </div>
-    """,
-    unsafe_allow_html=True
+app = FastAPI(
+    title="Asteca AI Coder API",
+    description="API para se comunicar com o LLM Groq do assistente Asteca AI Coder.",
+    version="1.0.0",
 )
 
-# Obrigado DSA
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 
+def _get_api_key(provided_key: str | None) -> str:
+    """Seleciona a chave de API a ser utilizada."""
 
+    if provided_key:
+        return provided_key
+
+    env_key = os.getenv("GROQ_API_KEY")
+    if env_key:
+        return env_key
+
+    raise HTTPException(
+        status_code=status.HTTP_400_BAD_REQUEST,
+        detail="Chave da API Groq não encontrada. Informe a chave no frontend ou configure a variável de ambiente GROQ_API_KEY.",
+    )
+
+
+def _build_messages(history: Sequence[ChatMessage], prompt: str) -> List[dict[str, str]]:
+    """Combina o prompt do sistema com o histórico e a mensagem atual."""
+
+    messages: List[dict[str, str]] = [{"role": "system", "content": CUSTOM_PROMPT}]
+    messages.extend({"role": msg.role, "content": msg.content} for msg in history)
+    messages.append({"role": "user", "content": prompt})
+    return messages
+
+
+@app.get("/", include_in_schema=False)
+def root() -> dict[str, str]:
+    """Retorna uma saudação simples para verificação rápida."""
+
+    return {"message": "Asteca AI Coder API em execução."}
+
+
+@app.post("/api/chat", response_model=ChatResponse)
+def chat(request: ChatRequest) -> ChatResponse:
+    """Recebe uma pergunta do usuário e retorna a resposta do assistente."""
+
+    api_key = _get_api_key(request.api_key)
+    client = Groq(api_key=api_key)
+
+    try:
+        completion = client.chat.completions.create(
+            messages=_build_messages(request.history, request.prompt),
+            model="openai/gpt-oss-20b",
+            temperature=0.7,
+            max_tokens=2048,
+        )
+    except Exception as exc:  # pragma: no cover - depende de chamada externa
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail=f"Erro ao comunicar com a API da Groq: {exc}",
+        ) from exc
+
+    reply = completion.choices[0].message.content
+    return ChatResponse(reply=reply)
+
+
+__all__ = [
+    "app",
+    "ChatMessage",
+    "ChatRequest",
+    "ChatResponse",
+]
