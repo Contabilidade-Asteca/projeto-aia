@@ -4,7 +4,7 @@ import './App.css'
 const initialAssistantMessage = {
   role: 'assistant',
   content:
-    'Olá! Eu sou o Asteca Coder, seu assistente de programação focado em Python. Como posso te ajudar hoje?'
+    'Olá! Eu sou a AIA, sua assistente virtual da Asteca. Como posso te ajudar hoje?'
 }
 
 function App() {
@@ -71,8 +71,8 @@ function App() {
   return (
     <div className="app">
       <header className="app__header">
-        <h1>Asteca AI Coder</h1>
-        <p>Assistente de programação Python com Groq LLM</p>
+        <h1>Asteca AIA</h1>
+        <p>Assistente virtual da Asteca Contabilidade</p>
       </header>
 
       <main className="app__main">
@@ -101,7 +101,7 @@ function App() {
               <textarea
                 value={input}
                 onChange={(event) => setInput(event.target.value)}
-                placeholder="Descreva sua dúvida sobre Python"
+                placeholder="Descreva sua dúvida sobre contabilidade"
                 rows={4}
                 required
               />
@@ -128,8 +128,8 @@ function App() {
         <aside className="sidebar">
           <h2>Como funciona?</h2>
           <p>
-            O Asteca AI Coder se conecta ao modelo <strong>openai/gpt-oss-20b</strong> da Groq para oferecer respostas detalhadas
-            sobre programação em Python. Informe sua dúvida, adicione sua chave Groq (caso queira usar outra) e aguarde a
+            A AIA se conecta ao modelo <strong>openai/gpt-oss-20b</strong> da Groq para oferecer respostas detalhadas
+            sobre Contabilidade e sobre a Asteca. Informe sua dúvida, adicione sua chave Groq (caso queira usar outra) e aguarde a
             resposta estruturada com explicações, exemplos e referências.
           </p>
           <p className="tip">
@@ -139,7 +139,7 @@ function App() {
       </main>
 
       <footer className="app__footer">
-        <small>Asteca AI Coder — Desenvolvido para auxiliar na aprendizagem de Python.</small>
+        <small>Asteca AIA — Desenvolvida para auxiliar na Asteca Contabilidade - Elias Araújo.</small>
       </footer>
     </div>
   )
