@@ -1,4 +1,6 @@
 import { useMemo, useState } from 'react'
+import ReactMarkdown from 'react-markdown'
+import remarkGfm from 'remark-gfm'
 import './App.css'
 
 const initialAssistantMessage = {
@@ -111,7 +113,17 @@ function App() {
                 <span className="message__role">
                   {message.role === 'user' ? 'Você' : 'Asteca'}
                 </span>
-                <p className="message__content">{message.content}</p>
+
+                {/* ✅ Renderiza Markdown apenas para mensagens do assistente */}
+                {message.role === 'assistant' ? (
+                  <div className="message__content markdown">
+                    <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                      {message.content}
+                    </ReactMarkdown>
+                  </div>
+                ) : (
+                  <p className="message__content">{message.content}</p>
+                )}
               </div>
             ))}
           </div>
@@ -153,7 +165,6 @@ function App() {
             estruturada com explicações, exemplos e referências.
           </p>
 
-          {/* Campo da API agora na sidebar */}
           <label className="field sidebar__field">
             <span>API Key Groq (Obrigatório)</span>
             <input
