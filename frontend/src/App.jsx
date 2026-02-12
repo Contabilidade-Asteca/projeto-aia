@@ -109,7 +109,7 @@ function App() {
 
             <div className="form-actions">
               <label className="field field--inline">
-                <span>API Key Groq (opcional)</span>
+                <span>API Key Groq (Obrigatório)</span>
                 <input
                   type="password"
                   value={apiKey}
