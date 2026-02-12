@@ -144,3 +144,86 @@ __all__ = [
     "ChatRequest",
     "ChatResponse",
 ]
+
+import os
+from typing import List, Literal, Sequence
+
+from fastapi import FastAPI, HTTPException, status, Response, Request
+from fastapi.middleware.cors import CORSMiddleware
+from groq import Groq
+from pydantic import BaseModel, Field
+from dotenv import load_dotenv
+
+load_dotenv()
+
+CUSTOM_PROMPT = """ ... (seu texto aqui) ... """
+
+class ChatMessage(BaseModel):
+    role: Literal["user", "assistant", "system"]
+    content: str
+
+class ChatRequest(BaseModel):
+    prompt: str
+    history: Sequence[ChatMessage] = []
+    api_key: str | None = None
+
+class ChatResponse(BaseModel):
+    reply: str
+
+app = FastAPI()
+
+frontend_origin = os.getenv("FRONTEND_ORIGIN", "*")
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[frontend_origin],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+COOKIE_NAME = "groq_api_key"
+
+@app.post("/api/set-key")
+def set_key(request: Request, response: Response):
+    body = request.json()
+    api_key = body.get("apiKey", "").strip()
+    if not api_key:
+        raise HTTPException(status_code=400, detail="API key vazia.")
+    response.set_cookie(
+        key=COOKIE_NAME,
+        value=api_key,
+        httponly=True,
+        secure= True,
+        samesite="none",
+        max_age=30*24*60*60,
+        path="/"
+    )
+    return {"ok": True}
+
+@app.post("/api/clear-key")
+def clear_key(response: Response):
+    response.delete_cookie(key=COOKIE_NAME)
+    return {"ok": True}
+
+def _get_api_key(request: Request, provided_key: str | None):
+    if provided_key:
+        return provided_key
+    api_key = request.cookies.get(COOKIE_NAME)
+    if api_key:
+        return api_key
+    raise HTTPException(status_code=400, detail="Chave da API não encontrada.")
+
+@app.post("/api/chat", response_model=ChatResponse)
+def chat(request: Request, payload: ChatRequest):
+    api_key = _get_api_key(request, payload.api_key)
+
+    client = Groq(api_key=api_key)
+    completion = client.chat.completions.create(
+        messages=[{"role":"system","content":CUSTOM_PROMPT}] +
+                 [{"role":m.role,"content":m.content} for m in payload.history] +
+                 [{"role":"user","content":payload.prompt}],
+        model="openai/gpt-oss-20b",
+    )
+    reply = completion.choices[0].message.content
+    return ChatResponse(reply=reply)
