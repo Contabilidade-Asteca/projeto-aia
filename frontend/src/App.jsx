@@ -127,13 +127,10 @@ function App() {
 
         <aside className="sidebar">
           <h2>Como funciona?</h2>
-          <p>
+          <p className="tip">
             A AIA se conecta ao modelo <strong>openai/gpt-oss-20b</strong> da Groq para oferecer respostas detalhadas
             sobre Contabilidade e sobre a Asteca. Informe sua dúvida, adicione sua chave Groq (caso queira usar outra) e aguarde a
             resposta estruturada com explicações, exemplos e referências.
-          </p>
-          <p className="tip">
-            Configure a variável <code>GROQ_API_KEY</code> no backend para evitar digitar a chave em cada acesso.
           </p>
         </aside>
       </main>
