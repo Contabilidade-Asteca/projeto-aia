@@ -24,6 +24,7 @@ function App() {
 
   async function handleSubmit(event) {
     event.preventDefault()
+
     if (!input.trim() || loading) {
       return
     }
@@ -49,14 +50,27 @@ function App() {
       })
 
       if (!response.ok) {
-        const { detail } = await response.json().catch(() => ({ detail: 'Erro desconhecido.' }))
-        throw new Error(typeof detail === 'string' ? detail : 'Erro inesperado ao consultar o assistente.')
+        const { detail } = await response
+          .json()
+          .catch(() => ({ detail: 'Erro desconhecido.' }))
+
+        throw new Error(
+          typeof detail === 'string'
+            ? detail
+            : 'Erro inesperado ao consultar o assistente.'
+        )
       }
 
       const data = await response.json()
-      setMessages([...updatedMessages, { role: 'assistant', content: data.reply }])
+
+      setMessages([
+        ...updatedMessages,
+        { role: 'assistant', content: data.reply }
+      ])
     } catch (err) {
-      setError(err.message || 'Não foi possível obter a resposta. Tente novamente.')
+      setError(
+        err.message || 'Não foi possível obter a resposta. Tente novamente.'
+      )
       setMessages(updatedMessages)
     } finally {
       setLoading(false)
@@ -79,15 +93,24 @@ function App() {
         <section className="panel">
           <div className="panel__header">
             <h2>Conversa</h2>
-            <button type="button" className="link-button" onClick={handleClearConversation}>
+            <button
+              type="button"
+              className="link-button"
+              onClick={handleClearConversation}
+            >
               Limpar histórico
             </button>
           </div>
 
           <div className="messages" role="log" aria-live="polite">
             {messages.map((message, index) => (
-              <div key={`message-${index}`} className={`message message--${message.role}`}>
-                <span className="message__role">{message.role === 'user' ? 'Você' : 'Asteca'}</span>
+              <div
+                key={`message-${index}`}
+                className={`message message--${message.role}`}
+              >
+                <span className="message__role">
+                  {message.role === 'user' ? 'Você' : 'Asteca'}
+                </span>
                 <p className="message__content">{message.content}</p>
               </div>
             ))}
@@ -106,19 +129,13 @@ function App() {
                 required
               />
             </label>
-                          
-            <div className="form-actions">
-              <label className="field field--inline">
-                <span>API Key Groq (Obrigatório)</span>
-                <input
-                  type="password"
-                  value={apiKey}
-                  onChange={(event) => setApiKey(event.target.value)}
-                  placeholder="gsk_..."
-                />
-              </label>
 
-              <button type="submit" className="primary-button" disabled={loading}>
+            <div className="form-actions">
+              <button
+                type="submit"
+                className="primary-button"
+                disabled={loading}
+              >
                 {loading ? 'Consultando...' : 'Enviar pergunta'}
               </button>
             </div>
@@ -127,16 +144,33 @@ function App() {
 
         <aside className="sidebar">
           <h2>Como funciona?</h2>
+
           <p className="tip">
-            A AIA se conecta ao modelo <strong>openai/gpt-oss-20b</strong> da Groq para oferecer respostas detalhadas
-            sobre Contabilidade e sobre a Asteca. Informe sua dúvida, adicione sua chave Groq (caso queira usar outra) e aguarde a
-            resposta estruturada com explicações, exemplos e referências.
+            A AIA se conecta ao modelo{' '}
+            <strong>openai/gpt-oss-20b</strong> da Groq para oferecer respostas
+            detalhadas sobre Contabilidade e sobre a Asteca. Informe sua dúvida,
+            adicione sua chave Groq (caso queira usar outra) e aguarde a resposta
+            estruturada com explicações, exemplos e referências.
           </p>
+
+          {/* Campo da API agora na sidebar */}
+          <label className="field sidebar__field">
+            <span>API Key Groq (Obrigatório)</span>
+            <input
+              type="password"
+              value={apiKey}
+              onChange={(event) => setApiKey(event.target.value)}
+              placeholder="gsk_..."
+              required
+            />
+          </label>
         </aside>
       </main>
 
       <footer className="app__footer">
-        <small>Asteca AIA — Desenvolvida para auxiliar na Asteca Contabilidade - Elias Araújo.</small>
+        <small>
+          Asteca AIA — Desenvolvida para auxiliar na Asteca Contabilidade - Elias Araújo.
+        </small>
       </footer>
     </div>
   )
