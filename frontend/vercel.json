@@ -1,0 +1,8 @@
+{
+  "rewrites": [
+    {
+      "source": "/api/(.*)",
+      "destination": "https://projeto-aia.vercel.app/api/$1"
+    }
+  ]
+}
