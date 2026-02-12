@@ -106,16 +106,6 @@ function App() {
                 required
               />
             </label>
-
-            <div className="form-actions">
-              <label className="field field--inline">
-                <span>API Key Groq (Obrigatório)</span>
-                <input
-                  type="password"
-                  value={apiKey}
-                  onChange={(event) => setApiKey(event.target.value)}
-                  placeholder="gsk_..."
-                />
               </label>
 
               <button type="submit" className="primary-button" disabled={loading}>
@@ -132,6 +122,16 @@ function App() {
             sobre Contabilidade e sobre a Asteca. Informe sua dúvida, adicione sua chave Groq (caso queira usar outra) e aguarde a
             resposta estruturada com explicações, exemplos e referências.
           </p>
+              
+            <div className="form-actions">
+              <label className="field field--inline">
+                <span>API Key Groq (Obrigatório)</span>
+                <input
+                  type="password"
+                  value={apiKey}
+                  onChange={(event) => setApiKey(event.target.value)}
+                  placeholder="gsk_..."
+                />
         </aside>
       </main>
 
