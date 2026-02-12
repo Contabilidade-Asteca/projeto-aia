@@ -1,5 +1,4 @@
-# Asteca AI Coder
-
+# Asteca AIA
 Aplicação dividida em **backend FastAPI** e **frontend React (Vite)** para conversar com o modelo `openai/gpt-oss-20b` via Groq.
 
 ## Pré-requisitos
@@ -15,7 +14,7 @@ python -m venv .venv
 source .venv/bin/activate  # Windows: .venv\\Scripts\\activate
 pip install -r requirements.txt
 export GROQ_API_KEY="sua-chave"  # Windows PowerShell: $Env:GROQ_API_KEY="sua-chave"
-uvicorn dsa_assistente:app --reload
+uvicorn aia_assistente:app --reload
 ```
 
 O backend ficará disponível em `http://localhost:8000` com o endpoint `POST /api/chat`.
